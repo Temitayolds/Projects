@@ -1,5 +1,6 @@
 import datetime
 import time
+import threading
 
 class Task:
     def __init__(self, description, start_time=None, end_time=None):
@@ -43,15 +44,22 @@ class ToDoList:
                 if current_time <= task.end_time:
                     print(f"ALARM: It's time to end task '{task.description}'!")
 
+def periodic_check(todo_list):
+    while True:
+        todo_list.check_due_tasks()
+        time.sleep(1)
+
 def main():
     todo_list = ToDoList()
+    
+    # Start a separate thread for periodic checking
+    threading.Thread(target=periodic_check, args=(todo_list,), daemon=True).start()
 
     while True:
         print("\n1. Add Task")
         print("2. View Tasks")
         print("3. Remove Task")
-        print("4. Check Due Tasks (Alarm)")
-        print("5. Exit")
+        print("4. Exit")
 
         choice = input("Enter your choice:")
 
@@ -62,9 +70,9 @@ def main():
             start_time = None
             end_time = None
             if start_time_str:
-                start_time = datetime.datetime.strptime(start_time_str, '%H:%M')
+                start_time = datetime.datetime.strptime(start_time_str, '%H:%M').replace(year=datetime.datetime.now().year, month=datetime.datetime.now().month, day=datetime.datetime.now().day)
             if end_time_str:
-                end_time = datetime.datetime.strptime(end_time_str, '%H:%M')
+                end_time = datetime.datetime.strptime(end_time_str, '%H:%M').replace(year=datetime.datetime.now().year, month=datetime.datetime.now().month, day=datetime.datetime.now().day)
             task = Task(description=task_description, start_time=start_time, end_time=end_time)
             todo_list.add_task(task)
         elif choice == '2':
@@ -76,15 +84,10 @@ def main():
                 task_index = int(input("Enter the index of the task to remove: "))
                 todo_list.remove_task(task_index)
         elif choice == '4':
-            todo_list.check_due_tasks()
-        elif choice == '5':
             print("Exiting...")
             break
         else:
             print("Invalid choice. Please enter a valid option.")
-
-        # Add a delay to check due tasks periodically (every minute in this case)
-        time.sleep(60)
 
 if __name__ == "__main__":
     main()
